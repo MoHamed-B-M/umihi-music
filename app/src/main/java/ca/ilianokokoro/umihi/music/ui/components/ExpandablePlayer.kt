@@ -106,6 +106,7 @@ fun ExpandablePlayer(
     }
 
     if (currentSong == null) return
+    val song = currentSong
 
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -183,7 +184,7 @@ fun ExpandablePlayer(
                     }
 
                     Thumbnail(
-                        href = currentSong?.thumbnailHref.toString(),
+                        href = song.thumbnailHref.toString(),
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
@@ -197,7 +198,7 @@ fun ExpandablePlayer(
                         horizontalAlignment = Alignment.Start,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        SongInfo(currentSong)
+                        SongInfo(song)
 
                         PlayerControls(
                             isPlaying = uiState.isPlaying,
@@ -214,7 +215,7 @@ fun ExpandablePlayer(
                 Spacer(modifier = Modifier.weight(1f))
 
                 MiniPlayerBar(
-                    currentSong = currentSong,
+                    currentSong = song,
                     isPlaying = songIsPlaying == true,
                     isLoading = songIsLoading,
                     onPlayPause = {
