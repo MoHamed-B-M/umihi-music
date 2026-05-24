@@ -13,8 +13,7 @@ env:
   MAIN_PROJECT_MODULE: app
   APP_NAME: Umihi Music
   APK_FILE_NAME: UmihiMusic
-  ORIGINAL_APK_PATH: /build/outputs/apk/release/app-release.apk
-  STORE_FILE: release-key.jks
+  ORIGINAL_APK_PATH: /build/outputs/apk/debug/app-debug.apk
 
 jobs:
   build-android-apk:
@@ -33,25 +32,12 @@ jobs:
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
 
-      - name: Set up Keystore
-        run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > ${{env.MAIN_PROJECT_MODULE}}/${{ env.STORE_FILE }}
-        env:
-          KEYSTORE_BASE64: ${{ secrets.SIGNING_KEY }}
-
-      - name: Create keystore.properties file
-        run: |
-          echo "storeFile=${{ env.STORE_FILE }}" > keystore.properties
-          echo "storePassword=${{ secrets.KEY_STORE_PASSWORD }}" >> keystore.properties
-          echo "keyAlias=${{ secrets.ALIAS }}" >> keystore.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> keystore.properties
-
-      - name: Build with dynamic beta flag
+      - name: Build debug APK
         run: |
           if [[ "${{ github.ref_name }}" == "prod" ]]; then
-            ./gradlew assembleRelease -Pbeta=false -PgitHash=${{ github.sha }}
+            ./gradlew assembleDebug -Pbeta=false -PgitHash=${{ github.sha }}
           else
-            ./gradlew assembleRelease -Pbeta=true -PgitHash=${{ github.sha }}
+            ./gradlew assembleDebug -Pbeta=true -PgitHash=${{ github.sha }}
           fi
 
       - name: Rename APK file
