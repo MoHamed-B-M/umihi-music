@@ -106,7 +106,7 @@ fun ExpandablePlayer(
     }
 
     if (currentSong == null) return
-    val song = currentSong
+    val song = currentSong!!
 
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
