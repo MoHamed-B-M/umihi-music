@@ -4,7 +4,7 @@ import java.io.FileInputStream
 import java.util.Properties
 
 val versionMajor = 1
-val versionMinor = 12
+val versionMinor = 13
 val versionPatch = 0
 
 val beta: Boolean = (project.findProperty("beta") as String?)?.toBoolean() ?: true
@@ -43,18 +43,27 @@ android {
 
 
     signingConfigs {
-        if (keystorePropertiesFile.exists()) {
+        val alias = System.getenv("ALIAS") ?: keystoreProperties.getProperty("keyAlias")
+        val keyPass = System.getenv("KEY_PASSWORD") ?: keystoreProperties.getProperty("keyPassword")
+        val storePath = System.getenv("STORE_FILE") ?: keystoreProperties.getProperty("storeFile")
+        val storePass = System.getenv("KEY_STORE_PASSWORD") ?: keystoreProperties.getProperty("storePassword")
+
+        if (alias != null && keyPass != null && storePath != null && storePass != null) {
             create("release") {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = alias
+                keyPassword = keyPass
+                storeFile = file(storePath)
+                storePassword = storePass
             }
         }
     }
 
 
     buildTypes {
+        nightly {
+            signingConfig = signingConfigs.getByName("debug")
+        }
+
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -62,9 +71,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            if (keystorePropertiesFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 

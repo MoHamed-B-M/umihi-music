@@ -2,24 +2,16 @@ package ca.ilianokokoro.umihi.music.ui.navigation
 
 import android.app.Application
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -41,10 +33,9 @@ import ca.ilianokokoro.umihi.music.R
 import ca.ilianokokoro.umihi.music.core.Constants
 import ca.ilianokokoro.umihi.music.core.helpers.UmihiHelper.printe
 import ca.ilianokokoro.umihi.music.ui.components.BackButton
-import ca.ilianokokoro.umihi.music.ui.components.miniplayer.MiniPlayerWrapper
+import ca.ilianokokoro.umihi.music.ui.components.ExpandablePlayer
 import ca.ilianokokoro.umihi.music.ui.screens.auth.AuthScreen
 import ca.ilianokokoro.umihi.music.ui.screens.home.HomeScreen
-import ca.ilianokokoro.umihi.music.ui.screens.player.PlayerScreen
 import ca.ilianokokoro.umihi.music.ui.screens.playlist.PlaylistScreen
 import ca.ilianokokoro.umihi.music.ui.screens.search.SearchScreen
 import ca.ilianokokoro.umihi.music.ui.screens.settings.SettingsScreen
@@ -57,18 +48,14 @@ fun NavigationRoot(modifier: Modifier = Modifier) {
     val app = LocalContext.current.applicationContext as Application
     val currentScreen = backStack.last()
     val screenConfig = rememberScreenUiConfig(currentScreen)
-    //  val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-        // .nestedScroll(scrollBehavior.nestedScrollConnection)
-        ,
+            .background(MaterialTheme.colorScheme.background),
         topBar = {
 
             TopAppBar(
-                //   scrollBehavior = scrollBehavior,
                 title = {
                     val hasTitle = screenConfig.titleId != 0 || screenConfig.title.isNotBlank()
 
@@ -94,39 +81,17 @@ fun NavigationRoot(modifier: Modifier = Modifier) {
             )
         },
         bottomBar = {
-            Column {
-                val miniPlayerModifier = if (screenConfig.showBottomBar) {
-                    Modifier.fillMaxWidth()
-                } else {
-                    Modifier
-                        .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.navigationBars)
-                }
-
-                MiniPlayerWrapper(
-                    showMiniPlayer = screenConfig.showMiniPlayer,
-                    onMiniPlayerPressed = { backStack.add(PlayerScreenKey) },
-                    modifier = miniPlayerModifier
+            AnimatedVisibility(
+                visible = screenConfig.showBottomBar,
+                enter = fadeIn(tween(Constants.Animation.NAVIGATION_DURATION)),
+                exit = fadeOut(tween(Constants.Animation.NAVIGATION_DURATION))
+            ) {
+                BottomNavigationBar(
+                    currentTab = screenConfig.selectedTab,
+                    onTabSelected = { key ->
+                        if (backStack.last() != key) backStack.add(key)
+                    }
                 )
-
-                AnimatedVisibility(
-                    visible = screenConfig.showBottomBar,
-                    enter = slideInVertically(
-                        animationSpec = spring(dampingRatio = 0.4f, stiffness = 350f)
-                    ) { it } + fadeIn(),
-                    exit = slideOutVertically(
-                        animationSpec = spring(dampingRatio = 0.4f, stiffness = 350f)
-                    ) { it } + fadeOut()
-                ) {
-
-
-                    BottomNavigationBar(
-                        currentTab = screenConfig.selectedTab,
-                        onTabSelected = { key ->
-                            if (backStack.last() != key) backStack.add(key)
-                        }
-                    )
-                }
             }
         }
 
@@ -203,23 +168,13 @@ fun NavigationRoot(modifier: Modifier = Modifier) {
                         is PlaylistScreenKey -> NavEntry(key) {
                             PlaylistScreen(
                                 playlistInfo = key.playlistInfo,
-                                onOpenPlayer = { backStack.add(PlayerScreenKey) },
+                                onOpenPlayer = { },
                                 application = app
                             )
                         }
 
                         is AuthScreenKey -> NavEntry(key) {
                             AuthScreen(
-                                onBack = backStack::safePop,
-                                application = app
-                            )
-                        }
-
-                        is PlayerScreenKey -> NavEntry(
-                            key,
-                            metadata = Constants.Animation.SLIDE_UP_TRANSITION
-                        ) {
-                            PlayerScreen(
                                 onBack = backStack::safePop,
                                 application = app
                             )
@@ -242,6 +197,11 @@ fun NavigationRoot(modifier: Modifier = Modifier) {
             )
         }
     }
+
+    ExpandablePlayer(
+        application = app,
+        modifier = Modifier.fillMaxSize()
+    )
 }
 
 
