@@ -1,0 +1,54 @@
+name: Build the android APK
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MAIN_PROJECT_MODULE: app
+  APP_NAME: Umihi Music
+  APK_FILE_NAME: UmihiMusic
+  ORIGINAL_APK_PATH: /build/outputs/apk/nightly/app-nightly.apk
+
+jobs:
+  build-android-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set Up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: 17
+          cache: "gradle"
+
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
+
+      - name: Build nightly APK
+        run: |
+          if [[ "${{ github.ref_name }}" == "prod" ]]; then
+            ./gradlew assembleNightly -Pbeta=false -PgitHash=${{ github.sha }}
+          else
+            ./gradlew assembleNightly -Pbeta=true -PgitHash=${{ github.sha }}
+          fi
+
+      - name: Rename APK file
+        run: sudo mv ${{env.MAIN_PROJECT_MODULE}}${{env.ORIGINAL_APK_PATH}}
+          ${{env.APK_FILE_NAME}}.apk
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: UmihiMusic
+          path: ${{env.APK_FILE_NAME}}.apk
+          overwrite: true
+          archive: false
+          if-no-files-found: error
