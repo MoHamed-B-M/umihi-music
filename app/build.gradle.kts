@@ -5,7 +5,7 @@ import java.util.Properties
 
 val versionMajor = 1
 val versionMinor = 13
-val versionPatch = 0
+val versionPatch = 1
 
 val beta: Boolean = (project.findProperty("beta") as String?)?.toBoolean() ?: true
 val keystorePropertiesFile: File = rootProject.file("keystore.properties")

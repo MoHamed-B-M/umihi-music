@@ -37,6 +37,8 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,9 +55,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import ca.ilianokokoro.umihi.music.core.Constants
 import ca.ilianokokoro.umihi.music.core.managers.PlayerManager
+import ca.ilianokokoro.umihi.music.extensions.toSong
 import ca.ilianokokoro.umihi.music.models.Song
 import ca.ilianokokoro.umihi.music.ui.screens.player.PlayerViewModel
 import ca.ilianokokoro.umihi.music.ui.screens.player.SongInfo
@@ -74,7 +78,32 @@ fun ExpandablePlayer(
         factory = PlayerViewModel.Factory(application)
     )
     val uiState = playerViewModel.uiState.collectAsStateWithLifecycle().value
-    val currentSong = uiState.queue.getOrNull(uiState.currentIndex)
+    val player by PlayerManager.controllerState.collectAsState()
+    var currentSong by remember { mutableStateOf(player?.currentMediaItem?.toSong()) }
+    var songIsPlaying by remember(player) { mutableStateOf(player?.isPlaying) }
+    var songIsLoading by remember(player) { mutableStateOf(player?.playbackState == Player.STATE_BUFFERING) }
+
+    DisposableEffect(player) {
+        currentSong = player?.currentMediaItem?.toSong()
+        songIsPlaying = player?.isPlaying
+        songIsLoading = player?.playbackState == Player.STATE_BUFFERING
+
+        val listener = object : Player.Listener {
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                currentSong = mediaItem?.toSong()
+            }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                songIsPlaying = isPlaying
+            }
+
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                songIsLoading = playbackState == Player.STATE_BUFFERING
+            }
+        }
+        player?.addListener(listener)
+        onDispose { player?.removeListener(listener) }
+    }
 
     if (currentSong == null) return
 
@@ -186,8 +215,8 @@ fun ExpandablePlayer(
 
                 MiniPlayerBar(
                     currentSong = currentSong,
-                    isPlaying = uiState.isPlaying,
-                    isLoading = uiState.isLoading,
+                    isPlaying = songIsPlaying == true,
+                    isLoading = songIsLoading,
                     onPlayPause = {
                         val player = PlayerManager.currentController as? Player
                         if (player?.isPlaying == true) player.pause() else player?.play()
