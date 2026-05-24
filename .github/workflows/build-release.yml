@@ -2,6 +2,7 @@ name: Build the android APK
 
 on:
   push:
+    branches: ['**']
   workflow_dispatch:
 
 concurrency:
