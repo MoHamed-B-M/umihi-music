@@ -13,8 +13,7 @@ env:
   MAIN_PROJECT_MODULE: app
   APP_NAME: Umihi Music
   APK_FILE_NAME: UmihiMusic
-  STORE_FILE: ${{ github.workspace }}/app/release-key.jks
-  ORIGINAL_APK_PATH: /build/outputs/apk/release/app-release.apk
+  ORIGINAL_APK_PATH: /build/outputs/apk/nightly/app-nightly.apk
 
 jobs:
   build-android-apk:
@@ -33,22 +32,13 @@ jobs:
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
 
-      - name: Decode keystore
-        run: |
-          echo "${{ secrets.SIGNING_KEY }}" | base64 --decode > ${{ env.STORE_FILE }}
-
-      - name: Build release APK
+      - name: Build nightly APK
         run: |
           if [[ "${{ github.ref_name }}" == "prod" ]]; then
-            ./gradlew assembleRelease -Pbeta=false -PgitHash=${{ github.sha }}
+            ./gradlew assembleNightly -Pbeta=false -PgitHash=${{ github.sha }}
           else
-            ./gradlew assembleRelease -Pbeta=true -PgitHash=${{ github.sha }}
+            ./gradlew assembleNightly -Pbeta=true -PgitHash=${{ github.sha }}
           fi
-        env:
-          ALIAS: ${{ secrets.ALIAS }}
-          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          STORE_FILE: ${{ env.STORE_FILE }}
 
       - name: Rename APK file
         run: sudo mv ${{env.MAIN_PROJECT_MODULE}}${{env.ORIGINAL_APK_PATH}}
@@ -62,7 +52,3 @@ jobs:
           overwrite: true
           archive: false
           if-no-files-found: error
-
-      - name: Delete keystore
-        if: always()
-        run: rm -f ${{ env.STORE_FILE }}
