@@ -13,7 +13,7 @@ env:
   MAIN_PROJECT_MODULE: app
   APP_NAME: Umihi Music
   APK_FILE_NAME: UmihiMusic
-  ORIGINAL_APK_PATH: /build/outputs/apk/nightly/app-nightly.apk
+  ORIGINAL_APK_PATH: /build/outputs/apk/release/app-release.apk
 
 jobs:
   build-android-apk:
@@ -32,12 +32,12 @@ jobs:
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
 
-      - name: Build nightly APK
+      - name: Build release APK
         run: |
           if [[ "${{ github.ref_name }}" == "prod" ]]; then
-            ./gradlew assembleNightly -Pbeta=false -PgitHash=${{ github.sha }}
+            ./gradlew assembleRelease -Pbeta=false -PgitHash=${{ github.sha }}
           else
-            ./gradlew assembleNightly -Pbeta=true -PgitHash=${{ github.sha }}
+            ./gradlew assembleRelease -Pbeta=true -PgitHash=${{ github.sha }}
           fi
 
       - name: Rename APK file

@@ -83,13 +83,13 @@ fun ExpandablePlayer(
     var isExpanded by remember { mutableStateOf(false) }
     val progress = remember { Animatable(1f) }
 
-    var containerHeightPx by remember { mutableStateOf(0f) }
+    var containerHeightPx: Float by remember { mutableStateOf(0f) }
 
     val miniPlayerHeightPx = with(density) {
         Constants.Ui.MiniPlayer.HEIGHT.toPx() + 12.dp.toPx()
     }
 
-    val collapsedOffsetPx get() = maxOf(0f, containerHeightPx - miniPlayerHeightPx)
+    fun collapsedOffsetPx(): Float = maxOf(0f, containerHeightPx - miniPlayerHeightPx)
 
     fun animateTo(target: Float) {
         scope.launch {
@@ -114,7 +114,7 @@ fun ExpandablePlayer(
             .clipToBounds()
             .onSizeChanged { containerHeightPx = it.height.toFloat() }
             .graphicsLayer {
-                translationY = collapsedOffsetPx * progress.value
+                translationY = collapsedOffsetPx() * progress.value
             }
             .pointerInput(Unit) {
                 detectDragGestures(
@@ -124,7 +124,7 @@ fun ExpandablePlayer(
                     onDrag = { change, dragAmount ->
                         change.consume()
                         scope.launch {
-                            val delta = -dragAmount.y / collapsedOffsetPx
+                            val delta = -dragAmount.y / collapsedOffsetPx()
                             progress.snapTo((progress.value + delta).coerceIn(0f, 1f))
                         }
                     }
