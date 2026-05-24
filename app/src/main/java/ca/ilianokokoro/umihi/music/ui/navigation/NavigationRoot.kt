@@ -2,6 +2,7 @@ package ca.ilianokokoro.umihi.music.ui.navigation
 
 import android.app.Application
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -110,8 +111,12 @@ fun NavigationRoot(modifier: Modifier = Modifier) {
 
                 AnimatedVisibility(
                     visible = screenConfig.showBottomBar,
-                    enter = slideInVertically { it } + fadeIn(),
-                    exit = slideOutVertically { it } + fadeOut()
+                    enter = slideInVertically(
+                        animationSpec = spring(dampingRatio = 0.4f, stiffness = 350f)
+                    ) { it } + fadeIn(),
+                    exit = slideOutVertically(
+                        animationSpec = spring(dampingRatio = 0.4f, stiffness = 350f)
+                    ) { it } + fadeOut()
                 ) {
 
 

@@ -1,6 +1,7 @@
 package ca.ilianokokoro.umihi.music.ui.components.miniplayer
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.WindowInsets
@@ -81,8 +82,14 @@ fun MiniPlayerWrapper(
 
     AnimatedVisibility(
         visible = currentSong != null && showMiniPlayer,
-        enter = slideInVertically(initialOffsetY = { it + bottomInset }),
-        exit = slideOutVertically(targetOffsetY = { it + bottomInset }),
+        enter = slideInVertically(
+            initialOffsetY = { it + bottomInset },
+            animationSpec = spring(dampingRatio = 0.4f, stiffness = 350f)
+        ),
+        exit = slideOutVertically(
+            targetOffsetY = { it + bottomInset },
+            animationSpec = spring(dampingRatio = 0.4f, stiffness = 350f)
+        ),
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)

@@ -1,12 +1,7 @@
 name: Build the android APK
-permissions:
-  contents: read
+
 on:
   push:
-    branches:
-      - main
-      - prod
-
   workflow_dispatch:
 
 concurrency:
@@ -19,13 +14,9 @@ env:
   APK_FILE_NAME: UmihiMusic
   ORIGINAL_APK_PATH: /build/outputs/apk/release/app-release.apk
   STORE_FILE: release-key.jks
-  BETA_TAG: beta
 
 jobs:
   build-android-apk:
-    permissions:
-      packages: write
-      contents: write
     runs-on: ubuntu-latest
 
     steps:
@@ -74,77 +65,3 @@ jobs:
           overwrite: true
           archive: false
           if-no-files-found: error
-  update-beta-prerelease:
-    permissions:
-      packages: write
-      contents: write
-    if: github.ref_name != 'prod'
-    needs:
-      - build-android-apk
-    runs-on: ubuntu-latest
-    name: Update the beta GitHub release
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v8
-        with:
-          path: ./artifacts
-
-      - name: Delete Old Beta Release
-        run: gh release delete ${{ env.BETA_TAG }} --cleanup-tag -y || true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create new Beta release
-        uses: ncipollo/release-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag: ${{ env.BETA_TAG }}
-          name: Beta
-          artifacts: ./artifacts/**/*.apk
-          allowUpdates: true
-          removeArtifacts: true
-          generateReleaseNotes: false
-          makeLatest: false
-          prerelease: true
-          commit: ${{ github.sha }}
-
-  publish-github-release:
-    permissions:
-      packages: write
-      contents: write
-    if: github.ref_name == 'prod'
-    needs:
-      - build-android-apk
-    runs-on: ubuntu-latest
-    name: Publish the GitHub release
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v8
-        with:
-          path: ./artifacts
-      - name: Extract version
-        id: get_version
-        run: |
-          versionMajor=$(grep -oP 'val\s+versionMajor\s*=\s*\K[0-9]+' ${{ env.MAIN_PROJECT_MODULE }}/build.gradle.kts)
-          versionMinor=$(grep -oP 'val\s+versionMinor\s*=\s*\K[0-9]+' ${{ env.MAIN_PROJECT_MODULE }}/build.gradle.kts)
-          versionPatch=$(grep -oP 'val\s+versionPatch\s*=\s*\K[0-9]+' ${{ env.MAIN_PROJECT_MODULE }}/build.gradle.kts)
-
-          version="${versionMajor}.${versionMinor}.${versionPatch}"
-
-          echo "version=$version"
-          echo "version=$version" >> $GITHUB_OUTPUT
-
-      - name: Create a Release
-        uses: ncipollo/release-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag: v${{ steps.get_version.outputs.version }}
-          artifacts: ./artifacts/**/*.apk
-          generateReleaseNotes: true
-          draft: true

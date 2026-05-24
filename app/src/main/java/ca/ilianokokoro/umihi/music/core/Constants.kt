@@ -1,7 +1,6 @@
 package ca.ilianokokoro.umihi.music.core
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -74,25 +73,25 @@ object Constants {
         val SLIDE_UP_TRANSITION = NavDisplay.transitionSpec {
             slideInVertically(
                 initialOffsetY = { it },
-                animationSpec = tween(
-                    durationMillis = NAVIGATION_DURATION * 2,
-                    easing = FastOutSlowInEasing
+                animationSpec = spring(
+                    dampingRatio = 0.35f,
+                    stiffness = 350f
                 )
             ) togetherWith fadeOut()
         } + NavDisplay.popTransitionSpec {
             fadeIn() togetherWith slideOutVertically(
                 targetOffsetY = { it },
-                animationSpec = tween(
-                    durationMillis = NAVIGATION_DURATION * 2,
-                    easing = FastOutSlowInEasing
+                animationSpec = spring(
+                    dampingRatio = 0.35f,
+                    stiffness = 350f
                 )
             )
         } + NavDisplay.predictivePopTransitionSpec {
             fadeIn() togetherWith slideOutVertically(
                 targetOffsetY = { it },
-                animationSpec = tween(
-                    durationMillis = NAVIGATION_DURATION * 2,
-                    easing = FastOutSlowInEasing
+                animationSpec = spring(
+                    dampingRatio = 0.35f,
+                    stiffness = 350f
                 )
             )
         }
