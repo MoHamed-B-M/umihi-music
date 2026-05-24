@@ -60,7 +60,7 @@ android {
 
 
     buildTypes {
-        nightly {
+        create("nightly") {
             signingConfig = signingConfigs.getByName("debug")
         }
 
